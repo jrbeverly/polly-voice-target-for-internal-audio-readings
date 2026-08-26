@@ -1,0 +1,8 @@
+target	pull	low_db	body_db	mid_db	presence_db	air_db
+audio/target/ABC-001.mp3	0.4516	2.40	0.59	-0.35	-0.08	-2.85
+audio/target/ABC-002.mp3	0.4876	3.70	-0.27	-2.56	-0.55	-0.93
+audio/target/ABC-003.mp3	0.4998	4.90	-0.37	-1.87	-0.67	-1.22
+audio/target/ABC-004.mp3	0.4385	4.42	1.10	-1.02	-1.23	-3.05
+audio/target/ABC-005.mp3	0.4593	2.92	-1.16	-1.95	0.48	-0.23
+audio/target/ABC-006.mp3	0.4557	2.43	0.64	0.34	0.01	-3.26
+audio/target/ABC-007.mp3	0.4727	3.05	0.77	-1.66	-0.60	-1.08

@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Polly Voice Target</title>
+<style>
+  body { margin: 0; font: 16px/1.6 system-ui, sans-serif; color: #f1ecff; background: linear-gradient(160deg, #1b1035, #0c1a2b 60%, #0a2320); min-height: 100vh; }
+  main { max-width: 760px; margin: 0 auto; padding: 48px 16px; }
+  h1 { font-size: clamp(2rem, 6vw, 3rem); line-height: 1.05; margin: 0 0 12px; }
+  .lede { color: #b9b0d6; margin: 0 0 28px; }
+  audio { width: 100%; margin-bottom: 16px; }
+  .track { display: grid; grid-template-columns: 7rem 1fr; gap: 12px; align-items: center; width: 100%; padding: 10px 14px; margin: 8px 0; font: inherit; color: inherit; text-align: left; background: #ffffff0d; border: 1px solid #ffffff1f; border-radius: 12px; cursor: pointer; }
+  .track:hover { border-color: #9d8cff88; }
+  .track[aria-pressed="true"] { background: #9d8cff26; border-color: #9d8cff; }
+  .track b { display: block; } .track small { color: #b9b0d6; }
+  .bands { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .band { position: relative; height: 44px; background: #ffffff0a; border-radius: 4px; }
+  .band::after { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1px solid #ffffff33; }
+  .bar { position: absolute; left: 20%; right: 20%; border-radius: 2px; }
+  .up { bottom: 50%; background: #5ce0b8; } .down { top: 50%; background: #ff8fa3; }
+  .band span { position: absolute; bottom: -18px; width: 100%; text-align: center; font-size: .7rem; color: #b9b0d6; }
+  .legend { display: grid; grid-template-columns: 7rem 1fr; gap: 12px; padding: 0 15px; font-size: .75rem; color: #b9b0d6; }
+  .legend div { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; text-align: center; }
+  .track .bands { margin-bottom: 14px; }
+  p.foot { color: #b9b0d6; font-size: .9rem; margin-top: 28px; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Polly Voice Target</h1>
+  <p class="lede">One Amazon Polly clip, EQ'd toward the tonal balance of seven human voice-over recordings. Pick a track while it plays; the position is kept, so you can flip between the original and each version mid-sentence.</p>
+
+  <audio id="player" controls preload="metadata" src="docs/demo/source.mp3"></audio>
+
+  <div class="legend"><span></span><div><span>125</span><span>400</span><span>1.4k</span><span>3.5k</span><span>8k</span></div></div>
+  <div id="tracks"></div>
+
+  <p class="foot">Bars show the gain applied per band in dB (125 Hz to 8 kHz), on a ±5 dB scale. Target recordings are not published; only the EQ'd Polly audio is.</p>
+</main>
+<script>
+const player = document.getElementById('player');
+const tracks = document.getElementById('tracks');
+
+function add(label, detail, src, gains) {
+  const button = document.createElement('button');
+  button.className = 'track';
+  button.setAttribute('aria-pressed', src === player.getAttribute('src'));
+  const bands = gains.map(g => {
+    const size = Math.min(Math.abs(g), 5) * 10;
+    return `<div class="band" title="${g > 0 ? '+' : ''}${g} dB"><div class="bar ${g >= 0 ? 'up' : 'down'}" style="height:${size}%"></div><span>${g > 0 ? '+' : ''}${g}</span></div>`;
+  }).join('');
+  button.innerHTML = `<div><b>${label}</b><small>${detail}</small></div><div class="bands">${bands}</div>`;
+  button.onclick = () => {
+    const time = player.currentTime;
+    const playing = !player.paused;
+    player.src = src;
+    player.addEventListener('loadedmetadata', () => {
+      player.currentTime = time;
+      if (playing) player.play();
+    }, { once: true });
+    tracks.querySelectorAll('.track').forEach(t => t.setAttribute('aria-pressed', t === button));
+  };
+  tracks.append(button);
+}
+
+fetch('docs/demo/settings.tsv').then(r => r.text()).then(text => {
+  add('Original', 'Polly, no EQ', 'docs/demo/source.mp3', [0, 0, 0, 0, 0]);
+  text.trim().split('\n').slice(1).forEach(row => {
+    const [target, pull, ...gains] = row.split('\t');
+    const name = target.split('/').pop().replace('.mp3', '');
+    add(name, `${Math.round(pull * 100)}% pull`, `docs/demo/${name}.mp3`, gains.map(Number));
+  });
+});
+</script>
+</body>
+</html>
